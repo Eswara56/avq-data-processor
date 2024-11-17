@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +62,7 @@ public class SystemConfigRepository {
             Query query = entityManager.createNativeQuery(sql, Map.class);
             query.setParameter("systemId", systemId);
             query.setParameter("fileType", fileType);
-            field = new HashMap<>();
+            field = new LinkedHashMap<>();
             List<Map<String, Object>> queryResult = query.getResultList();
             for(Map<String, Object> result : queryResult) {
                 UpstreamFieldResponse upstreamFieldResponse = new UpstreamFieldResponse();

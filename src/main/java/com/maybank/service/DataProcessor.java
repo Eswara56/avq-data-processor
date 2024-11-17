@@ -1,15 +1,13 @@
 package com.maybank.service;
 
 import com.maybank.config.FileConfig;
-import com.maybank.data.SystemConfigResponse;
-import com.maybank.data.UpstreamConfigResponse;
-import com.maybank.data.UpstreamFieldResponse;
-import com.maybank.data.UpstreamResponseData;
+import com.maybank.data.*;
 import com.maybank.exceptions.NoDataException;
 import com.maybank.repository.SystemConfigRepository;
 import com.maybank.util.ApplicationUtil;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -20,18 +18,13 @@ public class DataProcessor {
 
     private final SystemConfigRepository systemConfigRepository;
 
-    private final DetailFileService detailFileService;
-    private final HeaderFileService headerFileService;
-    private final TrailerFileService trailerFileService;
+    private final DynamicDataService fileDataService;
 
     public DataProcessor(FileConfig fileConfig, SystemConfigRepository systemConfigRepository,
-                         DetailFileService detailFileService, HeaderFileService headerFileService,
-                         TrailerFileService trailerFileService) {
+                         DynamicDataService fileDataService) {
         this.fileConfig = fileConfig;
         this.systemConfigRepository = systemConfigRepository;
-        this.detailFileService = detailFileService;
-        this.headerFileService = headerFileService;
-        this.trailerFileService = trailerFileService;
+        this.fileDataService = fileDataService;
     }
 
     public SystemConfigResponse fetchSystemConfigResponse(String appCode) {
@@ -52,18 +45,30 @@ public class DataProcessor {
         UpstreamConfigResponse upstreamConfig = new UpstreamConfigResponse();
         upstreamConfig.setSystemId(systemConfig.getApplCode());
         //set header data and process header file
-        UpstreamResponseData header = fetchUpstreamConfigResponse(systemConfig.getHeaderTable(), fileConfig.getHeader());
+        UpstreamResponseData header = fetchUpstreamConfigResponse(appCode, fileConfig.getHeader());
         upstreamConfig.setHeader(header);
         List<String> headerLines = ApplicationUtil.readFileLines(fileConfig.getHeaderFilePath());
         if(headerLines.isEmpty()){
             throw new NoDataException("No data found in header file");
         }
         String healderLine = headerLines.get(0);
+        String headerTable = systemConfig.getHeaderTable();
         Map<String, UpstreamFieldResponse> headerFieldMap = header.getFieldMap();
-
+        List<FieldMap> headerColumnAndValues = new ArrayList<>();
+        for (Map.Entry<String, UpstreamFieldResponse> entry : headerFieldMap.entrySet()) {
+            FieldMap fieldMap = new FieldMap();
+            UpstreamFieldResponse field = entry.getValue();
+            String value = healderLine.substring(field.getStart()-1, field.getEnd());
+            fieldMap.setColumn(field.getName());
+            fieldMap.setValue(value);
+            headerColumnAndValues.add(fieldMap);
+        }
+        //Dynamically insert data into header table based on the field map
+        fileDataService.processHeaderData(headerTable, headerColumnAndValues);
 
 
         //set detail data and process detail file
+        String detailTable = systemConfig.getDetailTable();
         UpstreamResponseData detail = fetchUpstreamConfigResponse(systemConfig.getDetailTable(), fileConfig.getDetail());
         upstreamConfig.setDetail(detail);
         List<String> detailLines = ApplicationUtil.readFileLines(fileConfig.getDetailFilePath());
@@ -72,6 +77,7 @@ public class DataProcessor {
         }
 
         //set trailer data and process trailer file
+        String trailerTable = systemConfig.getTrailerTable();
         UpstreamResponseData trailer = fetchUpstreamConfigResponse(systemConfig.getDetailTable(), fileConfig.getTrailer());
         upstreamConfig.setTrailer(trailer);
         List<String> trailerLines = ApplicationUtil.readFileLines(fileConfig.getTrailerFilePath());
