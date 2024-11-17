@@ -1,0 +1,3 @@
+queries:
+  systemConfig:
+    sql: "select APPL_CODE as applCode, HEADER_FILE as headerFile, DETAIL_FILE as detailFile, FOOTER_FILE as footerFile, TBL_HDR as tblHdr, TBL_DTL as tblDtl, TBL_TRLR as tblTrlr from AVQFile.dbo.T_EGL_BASE_SYSTEMS where APPL_CODE = :applCode"

@@ -2,6 +2,8 @@ server:
   port: 9002
 
 spring:
+  config:
+    import: queryconfig.yml
   datasource:
     url: jdbc:sqlserver://localhost;encrypt=true;trustServerCertificate=true;databaseName=AVQFile
     username: sa
@@ -16,5 +18,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.SQLServerDialect
 
-
-
+#####File Configurations#####
+file:
+  header: HEADER
+  trailer: TRAILER
+  detail: DETAIL
+  headerFilePath: D:/Work/AvqFiles/pwgldhdr
+  trailerFilePath: D:/Work/AvqFiles/pwgldtlr
+  detailFilePath: D:/Work/AvqFiles/pwgldinf
