@@ -1,25 +1,11 @@
-package org.maybank.com.processor;
+package com.maybank.processor;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import org.maybank.com.Repository.EGLDetailRepository;
-import org.maybank.com.Repository.SystemConfigRepository;
-import org.maybank.com.Service.DetailFileService;
-import org.maybank.com.Service.HeaderFileService;
-import org.maybank.com.Service.TrailerFileService;
-import org.maybank.com.entity.EGLDetail;
-import org.maybank.com.entity.SystemConfig;
+import com.maybank.repository.EGLDetailRepository;
+import com.maybank.repository.SystemConfigRepository;
+import com.maybank.service.DetailFileService;
+import com.maybank.service.HeaderFileService;
+import com.maybank.service.TrailerFileService;
+import com.maybank.entity.SystemConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

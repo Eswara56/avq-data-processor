@@ -1,9 +1,8 @@
-package org.maybank.com.Repository;
+package com.maybank.repository;
 
 import java.util.List;
 
-import org.maybank.com.entity.EGLHeader;
-import org.maybank.com.entity.EGLTrailer;
+import com.maybank.entity.EGLTrailer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

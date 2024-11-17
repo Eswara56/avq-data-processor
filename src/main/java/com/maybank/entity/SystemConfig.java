@@ -1,12 +1,13 @@
-package org.maybank.com.entity;
+package com.maybank.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-// fetch the files from the table
+
+/**
+ *
+ */
 @Entity
 @Table(name = "T_EGL_BASE_SYSTEMS")
 public class SystemConfig {

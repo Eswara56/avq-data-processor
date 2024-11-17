@@ -1,16 +1,14 @@
-package org.maybank.com.Service;
+package com.maybank.service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.maybank.com.Repository.EGLHeaderRepository;
-import org.maybank.com.Repository.EGLTrailerRepository;
-import org.maybank.com.entity.EGLHeader;
-import org.maybank.com.entity.EGLTrailer;
+
+import com.maybank.repository.EGLTrailerRepository;
+import com.maybank.entity.EGLTrailer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;

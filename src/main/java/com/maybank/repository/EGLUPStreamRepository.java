@@ -1,6 +1,6 @@
-package org.maybank.com.Repository;
+package com.maybank.repository;
 
-import org.maybank.com.entity.EGLUPStream;
+import com.maybank.entity.EGLUPStream;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

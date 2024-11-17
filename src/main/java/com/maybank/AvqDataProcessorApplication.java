@@ -1,9 +1,6 @@
-package org.maybank.com;
+package com.maybank;
 
-import java.io.IOException;
-
-import org.maybank.com.Service.DetailFileService;
-import org.maybank.com.processor.DataProcessor;
+import com.maybank.processor.DataProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

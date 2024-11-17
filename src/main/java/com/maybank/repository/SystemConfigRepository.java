@@ -1,5 +1,5 @@
-package org.maybank.com.Repository;
-import org.maybank.com.entity.SystemConfig;
+package com.maybank.repository;
+import com.maybank.entity.SystemConfig;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
