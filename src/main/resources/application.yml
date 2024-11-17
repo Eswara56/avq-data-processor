@@ -26,3 +26,4 @@ file:
   headerFilePath: D:/Work/AvqFiles/pwgldhdr
   trailerFilePath: D:/Work/AvqFiles/pwgldtlr
   detailFilePath: D:/Work/AvqFiles/pwgldinf
+  databaseType: AVQFile.dbo

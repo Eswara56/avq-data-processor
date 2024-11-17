@@ -82,25 +82,4 @@ public class SystemConfigRepository {
         return upstreamResponseData;
     }
 
-    /**
-     * This method to insert the data into header table.
-     */
-    public void insertHeaderData() {
-
-    }
-
-    /**
-     * This method to insert the data into detail table.
-     */
-    public void insertDetailData() {
-
-    }
-
-    /**
-     * This method to insert the data into trailer table.
-     */
-    public void insertTrailerData() {
-
-    }
-
 }

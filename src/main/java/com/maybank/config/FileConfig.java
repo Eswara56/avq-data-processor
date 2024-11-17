@@ -16,4 +16,5 @@ public class FileConfig {
     private String headerFilePath;
     private String detailFilePath;
     private String trailerFilePath;
+    private String databaseType;
 }

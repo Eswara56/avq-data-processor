@@ -45,27 +45,16 @@ public class DataProcessor {
         UpstreamConfigResponse upstreamConfig = new UpstreamConfigResponse();
         upstreamConfig.setSystemId(systemConfig.getApplCode());
         //set header data and process header file
+        String headerTable = systemConfig.getHeaderTable();
         UpstreamResponseData header = fetchUpstreamConfigResponse(appCode, fileConfig.getHeader());
         upstreamConfig.setHeader(header);
         List<String> headerLines = ApplicationUtil.readFileLines(fileConfig.getHeaderFilePath());
         if(headerLines.isEmpty()){
             throw new NoDataException("No data found in header file");
         }
-        String healderLine = headerLines.get(0);
-        String headerTable = systemConfig.getHeaderTable();
-        Map<String, UpstreamFieldResponse> headerFieldMap = header.getFieldMap();
-        List<FieldMap> headerColumnAndValues = new ArrayList<>();
-        for (Map.Entry<String, UpstreamFieldResponse> entry : headerFieldMap.entrySet()) {
-            FieldMap fieldMap = new FieldMap();
-            UpstreamFieldResponse field = entry.getValue();
-            String value = healderLine.substring(field.getStart()-1, field.getEnd());
-            fieldMap.setColumn(field.getName());
-            fieldMap.setValue(value);
-            headerColumnAndValues.add(fieldMap);
-        }
-        //Dynamically insert data into header table based on the field map
-        fileDataService.processHeaderData(headerTable, headerColumnAndValues);
 
+        //process header file
+        genericDynamicDataProcessor(systemConfig, header, headerLines, headerTable);
 
         //set detail data and process detail file
         String detailTable = systemConfig.getDetailTable();
@@ -75,6 +64,8 @@ public class DataProcessor {
         if(detailLines.isEmpty()){
             throw new NoDataException("No data found in detail file");
         }
+        //process detail file
+        genericDynamicDataProcessor(systemConfig, detail, detailLines, detailTable);
 
         //set trailer data and process trailer file
         String trailerTable = systemConfig.getTrailerTable();
@@ -84,9 +75,36 @@ public class DataProcessor {
         if(trailerLines.isEmpty()){
             throw new NoDataException("No data found in trailer file");
         }
-        String trailerLine = trailerLines.get(0);
+        //process trailer file
+        genericDynamicDataProcessor(systemConfig, trailer, trailerLines, trailerTable);
 
         return response;
+    }
+
+    /**
+     * This method is used to process the data and store it into the database dynamically.
+     * And this is common method for header, detail and trailer data processing.
+     * @param systemConfig
+     * @param header
+     * @param headerLines
+     */
+    private void genericDynamicDataProcessor(SystemConfigResponse systemConfig, UpstreamResponseData header, List<String> headerLines, String tableName) {
+        Map<String, UpstreamFieldResponse> headerFieldMap = header.getFieldMap();
+        List<List<FieldMap>> headerColumnAndValues = new ArrayList<>();
+        for(String headerLine : headerLines) {
+            List<FieldMap> dbRow = new ArrayList<>();
+            for (Map.Entry<String, UpstreamFieldResponse> entry : headerFieldMap.entrySet()) {
+                FieldMap fieldMap = new FieldMap();
+                UpstreamFieldResponse field = entry.getValue();
+                String value = headerLine.substring(field.getStart() - 1, field.getEnd());
+                fieldMap.setColumn(field.getName());
+                fieldMap.setValue("'"+value+"'");
+                dbRow.add(fieldMap);
+            }
+            headerColumnAndValues.add(dbRow);
+        }
+        //Dynamically insert data into header table based on the field map
+        fileDataService.processData(fileConfig.getDatabaseType()+"."+tableName, headerColumnAndValues);
     }
 
 
