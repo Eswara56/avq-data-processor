@@ -61,6 +61,7 @@ public class DataProcessor {
         //UpstreamConfigResponse upstreamConfig = new UpstreamConfigResponse();
         //upstreamConfig.setSystemId(systemConfig.getApplCode());
         //set header data and process header file
+        //Header----------1
         String headerTable = systemConfig.getHeaderTable();
         UpstreamResponseData header = fetchUpstreamConfigResponse(appCode, fileConfig.getHeader());
         //upstreamConfig.setHeader(header);
@@ -72,6 +73,7 @@ public class DataProcessor {
         //process header file
         genericDynamicDataProcessor(header, headerLines, headerTable);
 
+        //Detail----------------2
         //set detail data and process detail file
         String detailTable = systemConfig.getDetailTable();
         UpstreamResponseData detail = fetchUpstreamConfigResponse(appCode, fileConfig.getDetail());
@@ -83,6 +85,7 @@ public class DataProcessor {
         //process detail file
         genericDynamicDataProcessor(detail, detailLines, detailTable);
 
+        //Trailer----------------3
         //set trailer data and process trailer file
         String trailerTable = systemConfig.getTrailerTable();
         UpstreamResponseData trailer = fetchUpstreamConfigResponse(appCode, fileConfig.getTrailer());

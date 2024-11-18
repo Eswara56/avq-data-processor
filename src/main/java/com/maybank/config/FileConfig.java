@@ -17,4 +17,5 @@ public class FileConfig {
     private String detailFilePath;
     private String trailerFilePath;
     private String databaseType;
+    private int batchSize;
 }

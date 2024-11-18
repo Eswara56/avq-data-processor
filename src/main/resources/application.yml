@@ -31,3 +31,4 @@ file:
   trailerFilePath: D:/Work/AvqFiles/pwgldtlr
   detailFilePath: D:/Work/AvqFiles/pwgldinf
   databaseType: AVQFile.dbo
+  batchsize: 30

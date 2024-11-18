@@ -1,5 +1,6 @@
 package com.maybank.repository;
 
+import com.maybank.config.FileConfig;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -16,9 +17,11 @@ import java.util.List;
 public class DynamicDataRepository {
 
     private final EntityManager entityManager;
+    private final FileConfig fileConfig;
 
-    public DynamicDataRepository(EntityManager entityManager) {
+    public DynamicDataRepository(EntityManager entityManager, FileConfig fileConfig) {
         this.entityManager = entityManager;
+        this.fileConfig = fileConfig;
     }
 
     /**
@@ -28,7 +31,7 @@ public class DynamicDataRepository {
      */
     @Transactional
     public List<Integer> insertData(List<String> insertQueries) {
-        int batchSize = 30;
+        int batchSize = fileConfig.getBatchSize();
         //Execute the insert queries to store the data into the database
         //Use JPA EntityManager to execute the queries
         int count = 0;

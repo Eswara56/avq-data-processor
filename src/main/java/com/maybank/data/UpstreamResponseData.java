@@ -11,3 +11,4 @@ public class UpstreamResponseData {
     private String fileType;
     private Map<String, UpstreamFieldResponse> fieldMap;
 }
+
