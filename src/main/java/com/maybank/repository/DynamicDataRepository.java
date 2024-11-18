@@ -34,16 +34,19 @@ public class DynamicDataRepository {
         int count = 0;
         List<Integer> rowsAffected = new ArrayList<>();
         log.debug("Inserting data into database and the number of queries to be executed: {}", insertQueries.size());
+        System.out.println("Inserting data into database and the number of queries to be executed: " + insertQueries.size());
         for (String query : insertQueries) {
             count ++;
             entityManager.createNativeQuery(query).executeUpdate();
             //rowsAffected.add(result);
             if(count > 0 && count % batchSize == 0){
                 log.debug("Flushing and clearing the entity manager after processing {} queries", batchSize);
+                System.out.println("Flushing and clearing the entity manager after processing " + batchSize + " queries");
                 entityManager.flush();
                 entityManager.clear();
             }
         }
+        System.out.println("Flushing and clearing the entity manager after processing all queries");
         log.debug("Flushing and clearing the entity manager after processing all queries");
         //Finally flush and clear the entity manager
         entityManager.flush();

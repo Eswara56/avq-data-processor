@@ -27,14 +27,30 @@ public class DataProcessor {
         this.fileDataService = fileDataService;
     }
 
+    /**
+     * This method is used to fetch the system configuration response based on the appCode.
+     * @param appCode
+     * @return
+     */
     public SystemConfigResponse fetchSystemConfigResponse(String appCode) {
         return systemConfigRepository.fetchSystemConfig(appCode);
     }
 
+    /**
+     * This method is used to fetch the upstream configuration response based on the systemId and fileType.
+     * @param systemId
+     * @param fileType
+     * @return
+     */
     public UpstreamResponseData fetchUpstreamConfigResponse(String systemId, String fileType) {
         return systemConfigRepository.fetchUpstreamConfig(systemId, fileType);
     }
 
+    /**
+     * This method is used to process the files data and store it into the database.
+     * @param appCode
+     * @return
+     */
     public String processFilesData(String appCode) {
         String response = "Files processed successfully";
         SystemConfigResponse systemConfig = fetchSystemConfigResponse(appCode);
@@ -42,12 +58,12 @@ public class DataProcessor {
             throw new NoDataException("System configuration for '" + appCode + "' not found in database");
         }
 
-        UpstreamConfigResponse upstreamConfig = new UpstreamConfigResponse();
-        upstreamConfig.setSystemId(systemConfig.getApplCode());
+        //UpstreamConfigResponse upstreamConfig = new UpstreamConfigResponse();
+        //upstreamConfig.setSystemId(systemConfig.getApplCode());
         //set header data and process header file
         String headerTable = systemConfig.getHeaderTable();
         UpstreamResponseData header = fetchUpstreamConfigResponse(appCode, fileConfig.getHeader());
-        upstreamConfig.setHeader(header);
+        //upstreamConfig.setHeader(header);
         List<String> headerLines = ApplicationUtil.readFileLines(fileConfig.getHeaderFilePath());
         if(headerLines.isEmpty()){
             throw new NoDataException("No data found in header file");
@@ -59,7 +75,7 @@ public class DataProcessor {
         //set detail data and process detail file
         String detailTable = systemConfig.getDetailTable();
         UpstreamResponseData detail = fetchUpstreamConfigResponse(appCode, fileConfig.getDetail());
-        upstreamConfig.setDetail(detail);
+        //upstreamConfig.setDetail(detail);
         List<String> detailLines = ApplicationUtil.readFileLines(fileConfig.getDetailFilePath());
         if(detailLines.isEmpty()){
             throw new NoDataException("No data found in detail file");
@@ -70,21 +86,20 @@ public class DataProcessor {
         //set trailer data and process trailer file
         String trailerTable = systemConfig.getTrailerTable();
         UpstreamResponseData trailer = fetchUpstreamConfigResponse(appCode, fileConfig.getTrailer());
-        upstreamConfig.setTrailer(trailer);
+        //upstreamConfig.setTrailer(trailer);
         List<String> trailerLines = ApplicationUtil.readFileLines(fileConfig.getTrailerFilePath());
         if(trailerLines.isEmpty()){
             throw new NoDataException("No data found in trailer file");
         }
         //process trailer file
         genericDynamicDataProcessor(trailer, trailerLines, trailerTable);
-
         return response;
     }
 
     /**
      * This method is used to process the data and store it into the database dynamically.
      * And this is common method for header, detail and trailer data processing.
-     * @param systemConfig
+     * @param tableName
      * @param header
      * @param headerLines
      */
@@ -106,8 +121,4 @@ public class DataProcessor {
         //Dynamically insert data into header table based on the field map
         fileDataService.processData(fileConfig.getDatabaseType()+"."+tableName, headerColumnAndValues);
     }
-
-
-
-
 }
