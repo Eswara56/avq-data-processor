@@ -54,29 +54,29 @@ public class DataProcessor {
         }
 
         //process header file
-        genericDynamicDataProcessor(systemConfig, header, headerLines, headerTable);
+        genericDynamicDataProcessor(header, headerLines, headerTable);
 
         //set detail data and process detail file
         String detailTable = systemConfig.getDetailTable();
-        UpstreamResponseData detail = fetchUpstreamConfigResponse(systemConfig.getDetailTable(), fileConfig.getDetail());
+        UpstreamResponseData detail = fetchUpstreamConfigResponse(appCode, fileConfig.getDetail());
         upstreamConfig.setDetail(detail);
         List<String> detailLines = ApplicationUtil.readFileLines(fileConfig.getDetailFilePath());
         if(detailLines.isEmpty()){
             throw new NoDataException("No data found in detail file");
         }
         //process detail file
-        genericDynamicDataProcessor(systemConfig, detail, detailLines, detailTable);
+        genericDynamicDataProcessor(detail, detailLines, detailTable);
 
         //set trailer data and process trailer file
         String trailerTable = systemConfig.getTrailerTable();
-        UpstreamResponseData trailer = fetchUpstreamConfigResponse(systemConfig.getDetailTable(), fileConfig.getTrailer());
+        UpstreamResponseData trailer = fetchUpstreamConfigResponse(appCode, fileConfig.getTrailer());
         upstreamConfig.setTrailer(trailer);
         List<String> trailerLines = ApplicationUtil.readFileLines(fileConfig.getTrailerFilePath());
         if(trailerLines.isEmpty()){
             throw new NoDataException("No data found in trailer file");
         }
         //process trailer file
-        genericDynamicDataProcessor(systemConfig, trailer, trailerLines, trailerTable);
+        genericDynamicDataProcessor(trailer, trailerLines, trailerTable);
 
         return response;
     }
@@ -88,7 +88,7 @@ public class DataProcessor {
      * @param header
      * @param headerLines
      */
-    private void genericDynamicDataProcessor(SystemConfigResponse systemConfig, UpstreamResponseData header, List<String> headerLines, String tableName) {
+    private void genericDynamicDataProcessor(UpstreamResponseData header, List<String> headerLines, String tableName) {
         Map<String, UpstreamFieldResponse> headerFieldMap = header.getFieldMap();
         List<List<FieldMap>> headerColumnAndValues = new ArrayList<>();
         for(String headerLine : headerLines) {
@@ -108,25 +108,6 @@ public class DataProcessor {
     }
 
 
-//    public void processFiles(String applCode) {
-//        SystemConfig systemConfig = systemConfigRepository.findByApplCode(applCode);
-//        if (systemConfig == null) {
-//            throw new RuntimeException("System configuration for '" + applCode + "' not found in database");
-//        }
-//        // Retrieve paths for each file type
-//        String baseDirectory = "D:/Work/AvqFiles/"; // Base directory where files are located
-//        String headerFilePath = baseDirectory + systemConfig.getHeaderFile();
-//        String detailFilePath = baseDirectory + systemConfig.getDetailFile();
-//        String trailerFilePath = baseDirectory + systemConfig.getFooterFile();
-//        System.out.println("Header File Path: " + headerFilePath);
-//        System.out.println("Detail File Path: " + detailFilePath);
-//        System.out.println("Footer File Path: " + trailerFilePath);
-//        String detailTable = systemConfig.getTBL_DTL();
-//        String headerTable = systemConfig.getTBL_HDR();
-//        String TrailerTable = systemConfig.getTBL_TRLR();
-//        System.out.println();
-//        //procees each file and table respected
-//        detailFileService.processFilesWithTable(detailTable, detailFilePath);
-//    }
+
 
 }

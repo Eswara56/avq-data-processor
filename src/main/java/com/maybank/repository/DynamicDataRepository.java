@@ -2,6 +2,7 @@ package com.maybank.repository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.List;
 /**
  * This class is used to store the detail data into Dynamic Detail Table.
  */
+@Slf4j
 @Repository
 public class DynamicDataRepository {
 
@@ -26,13 +28,26 @@ public class DynamicDataRepository {
      */
     @Transactional
     public List<Integer> insertData(List<String> insertQueries) {
+        int batchSize = 30;
         //Execute the insert queries to store the data into the database
         //Use JPA EntityManager to execute the queries
+        int count = 0;
         List<Integer> rowsAffected = new ArrayList<>();
+        log.debug("Inserting data into database and the number of queries to be executed: {}", insertQueries.size());
         for (String query : insertQueries) {
+            count ++;
             entityManager.createNativeQuery(query).executeUpdate();
             //rowsAffected.add(result);
+            if(count > 0 && count % batchSize == 0){
+                log.debug("Flushing and clearing the entity manager after processing {} queries", batchSize);
+                entityManager.flush();
+                entityManager.clear();
+            }
         }
+        log.debug("Flushing and clearing the entity manager after processing all queries");
+        //Finally flush and clear the entity manager
+        entityManager.flush();
+        entityManager.clear();
         return rowsAffected;
     }
 }
