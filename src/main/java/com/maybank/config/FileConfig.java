@@ -13,9 +13,12 @@ public class FileConfig {
     private String header;
     private String detail;
     private String trailer;
+    private String baseFilePath;
     private String headerFilePath;
     private String detailFilePath;
     private String trailerFilePath;
     private String databaseType;
+    private int threadCount;
     private int batchSize;
+    private String baseFolderPath;
 }

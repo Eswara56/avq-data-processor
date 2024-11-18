@@ -1,6 +1,7 @@
 package com.maybank.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -27,5 +28,13 @@ public class ApplicationUtil {
             log.error("Error reading file: {}", e.getMessage());
         }
         return lines;
+    }
+
+    public static String findFileExtension(String fileType) {
+        String extension = "";
+        if (StringUtils.isNotBlank(fileType) && fileType.equalsIgnoreCase("AS400")) {
+            extension = ".dat";
+        }
+        return extension;
     }
 }

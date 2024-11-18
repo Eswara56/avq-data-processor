@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 /**
  * This class is used to store the data dynamically into the database by using {@link  com.maybank.repository.DynamicDataRepository}.
@@ -23,11 +24,12 @@ public class DynamicDataService {
 
     /**
      * This method is used to process the data and store it into the database dynamically.
+     *
      * @param headerTable
      * @param headerColumnAndValues
      * @return
      */
-    public List<Integer> processData(String headerTable, List<List<FieldMap>> headerColumnAndValues) {
+    public void processData(String headerTable, List<List<FieldMap>> headerColumnAndValues) {
         //Generate Dynamic SQL Query using the headerTable and headerColumnAndValues
         //Insert the data into the database
         List<String> insertQueries = new ArrayList<>();
@@ -46,6 +48,12 @@ public class DynamicDataService {
             insertQuery.append(")");
             insertQueries.add(insertQuery.toString());
         }
-        return dynamicDataRepository.insertData(insertQueries);
+
+        try {
+            dynamicDataRepository.insertQueries(insertQueries);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
+
 }

@@ -58,14 +58,21 @@ public class DataProcessor {
             throw new NoDataException("System configuration for '" + appCode + "' not found in database");
         }
 
-        //UpstreamConfigResponse upstreamConfig = new UpstreamConfigResponse();
-        //upstreamConfig.setSystemId(systemConfig.getApplCode());
+
         //set header data and process header file
         //Header----------1
+
+        String fileType = systemConfig.getFileType();
+
+        String fileExtension = ApplicationUtil.findFileExtension(fileType);
+
+        String headerFilePath = fileConfig.getBaseFilePath() + "/"+systemConfig.getFilefolder()+"/"+systemConfig.getHeaderFile()+fileExtension;
+        System.out.println("header file path"+headerFilePath);
         String headerTable = systemConfig.getHeaderTable();
         UpstreamResponseData header = fetchUpstreamConfigResponse(appCode, fileConfig.getHeader());
         //upstreamConfig.setHeader(header);
-        List<String> headerLines = ApplicationUtil.readFileLines(fileConfig.getHeaderFilePath());
+        // here , we have to read base directory and file
+        List<String> headerLines = ApplicationUtil.readFileLines(headerFilePath);
         if(headerLines.isEmpty()){
             throw new NoDataException("No data found in header file");
         }
@@ -75,10 +82,12 @@ public class DataProcessor {
 
         //Detail----------------2
         //set detail data and process detail file
+        String detailFilePath = fileConfig.getBaseFilePath() + "/"+systemConfig.getFilefolder()+"/"+systemConfig.getDetailFile()+fileExtension;
+
         String detailTable = systemConfig.getDetailTable();
         UpstreamResponseData detail = fetchUpstreamConfigResponse(appCode, fileConfig.getDetail());
         //upstreamConfig.setDetail(detail);
-        List<String> detailLines = ApplicationUtil.readFileLines(fileConfig.getDetailFilePath());
+        List<String> detailLines = ApplicationUtil.readFileLines(detailFilePath);
         if(detailLines.isEmpty()){
             throw new NoDataException("No data found in detail file");
         }
@@ -87,10 +96,11 @@ public class DataProcessor {
 
         //Trailer----------------3
         //set trailer data and process trailer file
+        String trailerFilePath = fileConfig.getBaseFilePath() + "/"+systemConfig.getFilefolder()+"/"+systemConfig.getTrailerFile()+fileExtension;
         String trailerTable = systemConfig.getTrailerTable();
         UpstreamResponseData trailer = fetchUpstreamConfigResponse(appCode, fileConfig.getTrailer());
         //upstreamConfig.setTrailer(trailer);
-        List<String> trailerLines = ApplicationUtil.readFileLines(fileConfig.getTrailerFilePath());
+        List<String> trailerLines = ApplicationUtil.readFileLines(trailerFilePath);
         if(trailerLines.isEmpty()){
             throw new NoDataException("No data found in trailer file");
         }

@@ -27,8 +27,10 @@ file:
   header: HEADER
   trailer: TRAILER
   detail: DETAIL
-  headerFilePath: D:/Work/AvqFiles/pwgldhdr
-  trailerFilePath: D:/Work/AvqFiles/pwgldtlr
-  detailFilePath: D:/Work/AvqFiles/pwgldinf
+  baseFilePath: D:/Work/Documents/Converted
+#  headerFilePath: D:/Work/AvqFiles/pwgldhdr
+#  trailerFilePath: D:/Work/AvqFiles/pwgldtlr
+#  detailFilePath: D:/Work/AvqFiles/pwgldinf
   databaseType: AVQFile.dbo
+  threadCount: 5
   batchsize: 30

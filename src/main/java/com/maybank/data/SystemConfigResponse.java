@@ -1,9 +1,5 @@
 package com.maybank.data;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,11 +16,15 @@ public class SystemConfigResponse {
 
     private String detailFile;
 
-    private String footerFile;
+    private String trailerFile;
     
     private String headerTable;
     
     private String detailTable;
     
     private String trailerTable;
+
+    private String filefolder;
+
+    private String fileType;
 }
