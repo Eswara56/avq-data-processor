@@ -12,14 +12,14 @@ spring:
   jpa:
     show-sql: false
     hibernate:
-      ddl-auto: none 
+      ddl-auto: update
     properties:
       hibernate:
         order_inserts: true
         order_updates: true
         generate_statistics: true
         jdbc:
-          batch_size: 30
+          batch_size: 1000
         dialect: org.hibernate.dialect.SQLServerDialect
 
 #####File Configurations#####
@@ -33,4 +33,4 @@ file:
 #  detailFilePath: D:/Work/AvqFiles/pwgldinf
   databaseType: AVQFile.dbo
   threadCount: 5
-  batchsize: 30
+  batchsize: 1000

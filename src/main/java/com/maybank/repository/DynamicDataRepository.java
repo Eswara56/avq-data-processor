@@ -26,23 +26,20 @@ public class DynamicDataRepository {
         this.entityManager = entityManager;
         this.fileConfig = fileConfig;
     }
-//donr sir
+
+    //donr
     @Transactional
     public void insertQueriesNew(List<String> insertQueries) throws Exception {
         int batchSize = fileConfig.getBatchSize();
-
         // Partition the queries for thread-level batching
         List<List<String>> partitions = new ArrayList<>();
         for (int i = 0; i < insertQueries.size(); i += batchSize) {
             partitions.add(insertQueries.subList(i, Math.min(i + batchSize, insertQueries.size())));
         }
-
         System.out.println("Number of partitions: " + partitions.size());
-
         // Create a ThreadPoolExecutor with a fixed number of threads
         ExecutorService executorService = Executors.newFixedThreadPool(fileConfig.getThreadCount());
         List<Future<?>> futures = new ArrayList<>();
-
         // Submit tasks for each partition
         for (List<String> partition : partitions) {
             Future<?> future = executorService.submit(() -> {
@@ -50,44 +47,50 @@ public class DynamicDataRepository {
             });
             futures.add(future);
         }
-
         // Wait for all threads to complete
         for (Future<?> future : futures) {
             future.get(); // Blocks until the thread completes
         }
-
         // Shutdown the thread pool
         executorService.shutdown();
 
         System.out.println("All partitions processed successfully.");
     }
-
     /**
      * This method is used to insert the data into the database.
      * If the transaction is successful, the data will be stored in the database. Otherwise, the transaction will be rolled back.
+     *
      * @param insertQueries
      */
     @Transactional
     public void insertQueries(List<String> insertQueries) {
+        long startTime = System.nanoTime();
         int batchSize = fileConfig.getBatchSize();
+        // Start measuring execution time
+
         //Execute the insert queries to store the data into the database
         //Use JPA EntityManager to execute the queries
         int count = 0;
         log.debug("Inserting data into database and the number of queries to be executed: {}", insertQueries.size());
         System.out.println("Inserting data into database and the number of queries to be executed: " + insertQueries.size());
         for (String query : insertQueries) {
-            count ++;
+            count++;
             try {
                 entityManager.createNativeQuery(query).executeUpdate();
-            }catch (Exception e) {
-                System.err.println("Failed Query : "+query);
+            } catch (Exception e) {
+                System.err.println("Failed Query : " + query);
             }
             //rowsAffected.add(result);
-            if(count > 0 && count % batchSize == 0){
+            if (count > 0 && count % batchSize == 0) {
                 log.debug("Flushing and clearing the entity manager after processing {} queries", batchSize);
                 System.out.println("Flushing and clearing the entity manager after processing " + batchSize + " queries");
             }
         }
+        // End measuring execution time
+        long endTime = System.nanoTime();
+        // Calculate and log the execution time
+        long durationInMillis = (endTime - startTime) / 1_000_000; // Convert nanoseconds to milliseconds
+        System.out.println("Execution time: " + durationInMillis + " ms");
         System.out.println("Flushing and clearing the entity manager after processing all queries");
         log.debug("Flushing and clearing the entity manager after processing all queries");
         //Finally flush and clear the entity manager

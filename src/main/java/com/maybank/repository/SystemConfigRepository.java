@@ -39,7 +39,6 @@ public class SystemConfigRepository {
         //Named query to fetch system configuration based on application code and directly map to SystemConfigResponse without any entity
         String sql = "select APPL_CODE as applcode, FILE_FOLDER as filefolder, FILE_TYPE as filetype, HEADER_FILE as headerfile, DETAIL_FILE as detailfile, FOOTER_FILE as footerfile, TBL_HDR as tblhdr, TBL_DTL as tbldtl, TBL_TRLR as tbltrlr from AVQFile.dbo.T_EGL_BASE_SYSTEMS where APPL_CODE = :applCode";
         //queryConfig.getQuery("systemConfig");
-
         try {
             Query query = entityManager.createNativeQuery(sql, Map.class);
 

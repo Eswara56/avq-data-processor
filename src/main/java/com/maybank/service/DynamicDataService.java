@@ -3,6 +3,7 @@ package com.maybank.service;
 import com.maybank.data.FieldMap;
 import com.maybank.repository.DynamicDataRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.server.DelegatingServerHttpResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -37,12 +38,25 @@ public class DynamicDataService {
         for (List<FieldMap> dbRow : headerColumnAndValues) {
             insertQuery = new StringBuilder("INSERT INTO " + headerTable + " (");
             for (FieldMap fieldMap : dbRow) {
-                insertQuery.append(fieldMap.getColumn()).append(",");
+
+                if(!"RECORD".equals(fieldMap.getColumn()))
+                {
+                    insertQuery.append(fieldMap.getColumn()).append(",");
+                }
+                else{
+                    System.out.println(fieldMap.getValue());
+                }
             }
             insertQuery.deleteCharAt(insertQuery.length() - 1);
             insertQuery.append(") VALUES (");
             for (FieldMap fieldMap : dbRow) {
-                insertQuery.append(fieldMap.getValue()).append(",");
+                if(!"RECORD".equals(fieldMap.getColumn()))
+                {
+                    if (fieldMap.getValue() == null || fieldMap.getValue().length() == 0) {
+                        System.out.println(fieldMap);
+                    }
+                    insertQuery.append(fieldMap.getValue()).append(",");
+                }
             }
             insertQuery.deleteCharAt(insertQuery.length() - 1);
             insertQuery.append(")");
@@ -52,6 +66,7 @@ public class DynamicDataService {
         try {
             dynamicDataRepository.insertQueries(insertQueries);
         } catch (Exception e) {
+            System.out.println("Error while inserting data into the database: " + e.getMessage());
             throw new RuntimeException(e);
         }
     }
