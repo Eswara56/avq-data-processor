@@ -66,6 +66,7 @@ public class DataProcessor {
      * @return
      */
     public String processFilesData(String appCode) {
+        JobStatusMap.createSystemCodeMap(appCode);
         String response = "Files processed successfully";
         SystemConfigResponse systemConfig = fetchSystemConfigResponse(appCode);
         if (systemConfig == null) {

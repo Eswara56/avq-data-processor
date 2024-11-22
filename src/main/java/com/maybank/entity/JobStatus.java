@@ -1,6 +1,7 @@
 package com.maybank.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.sql.Date;
 import java.sql.Timestamp;
@@ -29,6 +30,7 @@ public class JobStatus {
     private String FUNC_DESC;
     @Column(name = "EFF_DATE")
     private Date EFF_DATE;
+    @UpdateTimestamp
     @Column(name = "JOB_TIME")
     private Timestamp JOB_TIME;
 
