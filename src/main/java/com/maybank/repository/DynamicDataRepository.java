@@ -1,9 +1,11 @@
 package com.maybank.repository;
 
 import com.maybank.config.FileConfig;
+import com.maybank.service.AuditLogService;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -15,19 +17,21 @@ import java.util.concurrent.Future;
 /**
  * This class is used to store the detail data into Dynamic Detail Table.
  */
-@Slf4j
 @Repository
 public class DynamicDataRepository {
 
+    private static final Logger log = LoggerFactory.getLogger(DynamicDataRepository.class);
     private final EntityManager entityManager;
     private final FileConfig fileConfig;
+    private final AuditLogService auditLogService;
 
-    public DynamicDataRepository(EntityManager entityManager, FileConfig fileConfig) {
+    public DynamicDataRepository(EntityManager entityManager, FileConfig fileConfig, AuditLogService auditLogService) {
         this.entityManager = entityManager;
         this.fileConfig = fileConfig;
+        this.auditLogService = auditLogService;
     }
 
-    //donr
+
     @Transactional
     public void insertQueriesNew(List<String> insertQueries) throws Exception {
         int batchSize = fileConfig.getBatchSize();
@@ -36,7 +40,8 @@ public class DynamicDataRepository {
         for (int i = 0; i < insertQueries.size(); i += batchSize) {
             partitions.add(insertQueries.subList(i, Math.min(i + batchSize, insertQueries.size())));
         }
-        System.out.println("Number of partitions: " + partitions.size());
+
+        log.debug("Number of partitions: {}", partitions.size());
         // Create a ThreadPoolExecutor with a fixed number of threads
         ExecutorService executorService = Executors.newFixedThreadPool(fileConfig.getThreadCount());
         List<Future<?>> futures = new ArrayList<>();
@@ -53,9 +58,10 @@ public class DynamicDataRepository {
         }
         // Shutdown the thread pool
         executorService.shutdown();
+        log.debug("All partitions processed successfully.");
 
-        System.out.println("All partitions processed successfully.");
     }
+
     /**
      * This method is used to insert the data into the database.
      * If the transaction is successful, the data will be stored in the database. Otherwise, the transaction will be rolled back.
@@ -72,26 +78,24 @@ public class DynamicDataRepository {
         //Use JPA EntityManager to execute the queries
         int count = 0;
         log.debug("Inserting data into database and the number of queries to be executed: {}", insertQueries.size());
-        System.out.println("Inserting data into database and the number of queries to be executed: " + insertQueries.size());
         for (String query : insertQueries) {
             count++;
             try {
                 entityManager.createNativeQuery(query).executeUpdate();
             } catch (Exception e) {
-                System.err.println("Failed Query : " + query);
+                log.debug("Failed Query : " + query + " " + e.getMessage());
+//                auditLogService.log("insertQueries", "insertQueries", " UserID: " + appCode, "tally the credit and debit amount", " The system " +e.getMessage());
             }
             //rowsAffected.add(result);
             if (count > 0 && count % batchSize == 0) {
                 log.debug("Flushing and clearing the entity manager after processing {} queries", batchSize);
-                System.out.println("Flushing and clearing the entity manager after processing " + batchSize + " queries");
             }
         }
         // End measuring execution time
         long endTime = System.nanoTime();
         // Calculate and log the execution time
         long durationInMillis = (endTime - startTime) / 1_000_000; // Convert nanoseconds to milliseconds
-        System.out.println("Execution time: " + durationInMillis + " ms");
-        System.out.println("Flushing and clearing the entity manager after processing all queries");
+        log.debug("Execution time: " + durationInMillis + " ms");
         log.debug("Flushing and clearing the entity manager after processing all queries");
         //Finally flush and clear the entity manager
     }

@@ -14,4 +14,11 @@ public class CustomExceptionHandler {
         error.setMessage(ex.getMessage());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<CustomError> handleBusinessException(BusinessException ex) {
+        CustomError error = new CustomError();
+        error.setMessage(ex.getMessage());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
 }

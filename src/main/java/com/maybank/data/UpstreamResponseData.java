@@ -1,14 +1,26 @@
 package com.maybank.data;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.Map;
 
-@Setter
-@Getter
+
 public class UpstreamResponseData {
-    private String fileType;
+    private String FILE_TYPE;
     private Map<String, UpstreamFieldResponse> fieldMap;
+
+    public String getFILE_TYPE() {
+        return FILE_TYPE;
+    }
+
+    public void setFILE_TYPE(String FILE_TYPE) {
+        this.FILE_TYPE = FILE_TYPE;
+    }
+
+    public Map<String, UpstreamFieldResponse> getFieldMap() {
+        return fieldMap;
+    }
+
+    public void setFieldMap(Map<String, UpstreamFieldResponse> fieldMap) {
+        this.fieldMap = fieldMap;
+    }
 }
 
