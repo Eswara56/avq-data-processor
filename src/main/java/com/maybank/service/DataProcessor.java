@@ -8,6 +8,7 @@ import com.maybank.data.UpstreamResponseData;
 import com.maybank.exceptions.NoDataException;
 import com.maybank.repository.SystemConfigRepository;
 import com.maybank.util.ApplicationUtil;
+import com.maybank.util.JobStatusMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

@@ -59,19 +59,8 @@ public class ApplicationUtil {
         //Find all the file names in the folder
         File folder = new File(fulleFilePath);
         File[] listOfFiles = folder.listFiles();
-//        if (listOfFiles == null || listOfFiles.length == 0) {
-//            // Log to audit if the folder is empty or not accessible
-//            auditLogService.log(
-//                    "findFullFileName",
-//                    "File Search Validator",
-//                    "System",
-//                    "Folder is empty or inaccessible",
-//                    "The folder at path " + fulleFilePath + " is empty or inaccessible."
-//            );
-//            return null;
-//        }
-
         String fileName = "";
+        assert listOfFiles != null;
         for (File file : listOfFiles) {
             if (file.isFile()) {
                 if (file.getName().contains(getFileNameeWithouExtension)) {
