@@ -2,11 +2,14 @@ package com.maybank.service;
 
 import com.maybank.config.FileConfig;
 import com.maybank.data.*;
+import com.maybank.entity.JobStatus;
 import com.maybank.exceptions.BusinessException;
 import com.maybank.exceptions.NoDataException;
 import com.maybank.repository.SystemConfigRepository;
 import com.maybank.util.ApplicationUtil;
 import com.maybank.util.JobStatusMap;
+import com.maybank.util.Status;
+import com.maybank.util.StatusMessageType;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,12 +31,15 @@ public class DataProcessor {
 
     private final AuditLogService auditLogService;
 
+    private JobStatusAyncService jobStatusAyncService;
+
     public DataProcessor(FileConfig fileConfig, SystemConfigRepository systemConfigRepository, AuditLogService auditLogService,
-                         DynamicDataService fileDataService) {
+                         DynamicDataService fileDataService, JobStatusAyncService jobStatusAyncService) {
         this.fileConfig = fileConfig;
         this.systemConfigRepository = systemConfigRepository;
         this.fileDataService = fileDataService;
         this.auditLogService = auditLogService;
+        this.jobStatusAyncService = jobStatusAyncService;
     }
 
     /**
@@ -43,9 +49,11 @@ public class DataProcessor {
      * @return
      */
     public SystemConfigResponse fetchSystemConfigResponse(String appCode) {
-//         here our firt job is to fetch the system configuration response based on the appCode
-
-        return systemConfigRepository.fetchSystemConfig(appCode);
+        SystemConfigResponse systemConfigResponse = systemConfigRepository.fetchSystemConfig(appCode);
+        jobStatusAyncService.updateJobStatusMapAndInsertIntoDB(appCode, new Status(StatusMessageType.COMPLETED.getValue(), 10.0),
+                new JobStatus(ApplicationUtil.currentMethodName(), appCode, "CONFIG", 0, ApplicationUtil.currentMethodName(),
+                "System configuration fetched successfully", null));
+        return systemConfigResponse;
     }
 
     /**
