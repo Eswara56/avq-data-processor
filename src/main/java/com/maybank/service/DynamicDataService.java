@@ -39,38 +39,15 @@ public class DynamicDataService {
      * @return
      */
     public void processData(String appCode, String headerTable, List<List<FieldMap>> headerColumnAndValues) {
+        // Start measuring execution time
+        long startTime = System.currentTimeMillis();
         //Generate Dynamic SQL Query using the headerTable and headerColumnAndValues
         //Insert the data into the database
-        double sum = 0.0;
-        double sumCredits = 0.0;
-        double sumDebits = 0.0;
         List<String> insertQueries = new ArrayList<>();
         StringBuilder insertQuery = null;
-        for (List<FieldMap> dbRow : headerColumnAndValues) {
-            boolean isCreditor = false;
-            boolean isDebitor = false;
+        for ( List<FieldMap> dbRow : headerColumnAndValues) {
             insertQuery = new StringBuilder("INSERT INTO " + headerTable + " (");
             for (FieldMap fieldMap : dbRow) {
-                //--start
-                if (fieldMap.getColumn().equalsIgnoreCase("DR_CR_IND")) {
-                    if (fieldMap.getValue().contains("C")) {
-                        isCreditor = true;
-                        isDebitor = false;
-                    } else if (fieldMap.getValue().contains("D")) {
-                        isDebitor = true;
-                        isCreditor = false;
-                    } else {
-                        log.debug("Invalid value for DR_CR_IND: " + fieldMap.getValue());
-                    }
-                }
-                if (fieldMap.getColumn().equalsIgnoreCase("POST_AMT")) {
-                    if (isCreditor) {
-                        sumCredits += Double.parseDouble(fieldMap.getValue().replace(",", ""));
-                    } else if (isDebitor) {
-                        sumDebits += Double.parseDouble(fieldMap.getValue().replace(",", ""));
-                    }
-                }
-                //--end
                 if (!"RECORD".equals(fieldMap.getColumn())) {
                     insertQuery.append(fieldMap.getColumn()).append(",");
                 } else {
@@ -79,20 +56,21 @@ public class DynamicDataService {
             }
             prepareInsertValues(dbRow, insertQuery, insertQueries);
         }
-        sum = sumCredits - sumDebits;
-        System.out.println(" the total sum is" + sum);
-        log.debug(" the total sum is" + sum);
-        if (sum != 0) {
-            auditLogService.log("processData", "Comparing Creditor and Debtor Balances", " UserID: ", "comparing creditor and debtor balances - failed", " Creditor and debtor balances do not tally for AppCode, This a suspense Account " + sum);
-            throw new IllegalArgumentException("Creditor and Debitor balance mismatch! This a suspense Account " + sum);
-        }
         try {
             dynamicDataRepository.insertQueries(insertQueries);
+
         } catch (Exception e) {
             auditLogService.log("processData", "insertQueries", " UserID: " + appCode, "forming in", " The system " + e.getMessage());
             log.debug("Error while inserting data into the database: {}", e.getMessage());
             throw new BusinessException("Error while inserting data into the database: " + e.getMessage());
         }
+
+        // End measuring execution time
+        long endTime = System.currentTimeMillis();
+        // Calculate and log the execution time
+        long durationInSeconds  = (endTime - startTime)/1000; // Convert nanoseconds to seconds
+        System.out.println("Execution time: " + durationInSeconds  + " seconds");
+        log.debug("Execution time: " + durationInSeconds  + " seconds");
     }
 
     /**

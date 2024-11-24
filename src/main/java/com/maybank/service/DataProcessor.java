@@ -1,21 +1,19 @@
 package com.maybank.service;
 
 import com.maybank.config.FileConfig;
-import com.maybank.data.FieldMap;
-import com.maybank.data.SystemConfigResponse;
-import com.maybank.data.UpstreamFieldResponse;
-import com.maybank.data.UpstreamResponseData;
+import com.maybank.data.*;
+import com.maybank.exceptions.BusinessException;
 import com.maybank.exceptions.NoDataException;
 import com.maybank.repository.SystemConfigRepository;
 import com.maybank.util.ApplicationUtil;
 import com.maybank.util.JobStatusMap;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.*;
 
 @Service
 public class DataProcessor {
@@ -45,6 +43,8 @@ public class DataProcessor {
      * @return
      */
     public SystemConfigResponse fetchSystemConfigResponse(String appCode) {
+//         here our firt job is to fetch the system configuration response based on the appCode
+
         return systemConfigRepository.fetchSystemConfig(appCode);
     }
 
@@ -66,6 +66,7 @@ public class DataProcessor {
      * @return
      */
     public String processFilesData(String appCode) {
+        long startTime = System.currentTimeMillis();
         JobStatusMap.createSystemCodeMap(appCode);
         String response = "Files processed successfully";
         SystemConfigResponse systemConfig = fetchSystemConfigResponse(appCode);
@@ -120,6 +121,7 @@ public class DataProcessor {
         try {
             //process detail file
             genericDynamicDataProcessor(appCode, detail, detailLines, detailTable);
+
         } catch (StringIndexOutOfBoundsException e) {
             auditLogService.log("genericDynamicDataProcessor", "Detail File Validator", "UserID: " + appCode, "Detail file processing failed", " Unable to process the detail file: The required data is missing or incomplete in the specified range " + e.getMessage() + "Please check the file for errors.");
             throw new RuntimeException(e);
@@ -142,12 +144,14 @@ public class DataProcessor {
             auditLogService.log("genericDynamicDataProcessor", "Trailer File Validator", "UserID: " + appCode, "Trailer file processing failed", " Unable to process the Trailer file: The required data is missing or incomplete in the specified range " + e.getMessage() + "Please check the file for errors.");
             throw new RuntimeException(e);
         }
+        long endTime = System.currentTimeMillis();
+        long durationInSeconds = (endTime - startTime) / 1000;
+        System.out.println("Execution time: " + durationInSeconds + " seconds");
         return response;
     }
 
 
-    public String getAmountValue(String input) {
-
+    private String getAmountValue(String input) {
         input = input.trim();
         if (input.length() < 2) {
             return "";
@@ -167,15 +171,15 @@ public class DataProcessor {
 
     /**
      * This method is used to process the data and store it into the database dynamically.
-     * And this is common method for header, detail and trailer data processing.
+     * And this is common method for upstreamResponseData, detail and trailer data processing.
      *
      * @param appCode
      * @param tableName
-     * @param header
+     * @param upstreamResponseData
      * @param lines
      */
-    private void genericDynamicDataProcessor(String appCode, UpstreamResponseData header, List<String> lines, String tableName) {
-        Map<String, UpstreamFieldResponse> headerFieldMap = header.getFieldMap();
+    private void genericDynamicDataProcessor(String appCode, UpstreamResponseData upstreamResponseData, List<String> lines, String tableName) {
+        Map<String, UpstreamFieldResponse> headerFieldMap = upstreamResponseData.getFieldMap();
 
         List<List<FieldMap>> columnAndValues = new ArrayList<>();
         for (String line : lines) {
@@ -206,47 +210,48 @@ public class DataProcessor {
                 System.out.println("Header Line: {}" + value);
                 dbRow.add(fieldMap);
             }
-            columnAndValues.add(dbRow);
+            List<FieldMap> sortedDBRow = dbRow.parallelStream().sorted(Comparator.comparing(FieldMap::getColumn)).toList();
+            columnAndValues.add(sortedDBRow);
         }
-        //compareCreditorAnDebitorBalance(columnAndValues);
-        //Dynamically insert data into header table based on the field map
+
+        //Dynamically insert data into upstreamResponseData table based on the field map
         fileDataService.processData(appCode, fileConfig.getDatabaseType() + "." + tableName, columnAndValues);
+        if(upstreamResponseData.getFILE_TYPE().equalsIgnoreCase("DETAIL")) {
+            creditAndDebitTally(columnAndValues);
+        }
     }
 
-    private void compareCreditorAnDebitorBalance(List<List<FieldMap>> headerColumnAndValues) {
-        double sum = 0.0;
-        double sumCredits = 0.0;
-        double sumDebits = 0.0;
-        for (List<FieldMap> dbRow : headerColumnAndValues) {
-            boolean isCreditor = false;
-            boolean isDebitor = false;
-            for (FieldMap fieldMap : dbRow) {
-                if (fieldMap.getColumn().equalsIgnoreCase("DR_CR_IND")) {
-                    if (fieldMap.getValue().contains("C")) {
-                        isCreditor = true;
-                        isDebitor = false;
-                    } else if (fieldMap.getValue().contains("D")) {
-                        isDebitor = true;
-                        isCreditor = false;
-                    } else {
-                        log.debug("Invalid value for DR_CR_IND: " + fieldMap.getValue());
-                    }
-                }
-                if (fieldMap.getColumn().equalsIgnoreCase("POST_AMT")) {
-                    if (isCreditor) {
-                        sumCredits += Double.parseDouble(fieldMap.getValue().replace(",", ""));
-                    } else if (isDebitor) {
-                        sumDebits += Double.parseDouble(fieldMap.getValue().replace(",", ""));
-                    }
+    private void creditAndDebitTally(List<List<FieldMap>> columnAndValues) {
+// Nested Map to group by CO_CODE -> CURCY_3_CODE -> UNIT_NO -> DR_CR_IND
+        Map<CreditAndDebit, BigDecimal> result = new HashMap<>();
+        for (List<FieldMap> dbRow : columnAndValues) {
+            //double postAmt = 0.0;
+            BigDecimal postAmt = BigDecimal.ZERO;
+            CreditAndDebit creditAndDebit = new CreditAndDebit();
+            String DR_CR_IND = "";
+            for (FieldMap eachColumn : dbRow) {
+                if (eachColumn.getColumn().replace("'","").equals("CO_CODE")) {
+                    creditAndDebit.setCO_CODE(eachColumn.getValue().replace("'",""));
+                } else if (eachColumn.getColumn().replace("'","").trim().equals("CURCY_3_CODE")) {
+                    creditAndDebit.setCURCY_3_CODE(eachColumn.getValue().replace("'",""));
+                } else if (eachColumn.getColumn().replace("'","").equals("UNIT_NO")) {
+                    creditAndDebit.setUNIT_NO(Integer.parseInt(eachColumn.getValue().replace("'", "")));
+                } else if (eachColumn.getColumn().replace("'","").equals("DR_CR_IND")) {
+                    DR_CR_IND = eachColumn.getValue().replace("'", "");
+                } else if (eachColumn.getColumn().replace("'","").equals("POST_AMT")) {
+                    postAmt = new BigDecimal(eachColumn.getValue().replace("'",""));
                 }
             }
+            if (StringUtils.isNotBlank(DR_CR_IND) && DR_CR_IND.equals("C")) {
+                result.put(creditAndDebit, result.getOrDefault(creditAndDebit, BigDecimal.ZERO).add(postAmt));
+            } else if(StringUtils.isNotBlank(DR_CR_IND) && DR_CR_IND.equals("D")) {
+                result.put(creditAndDebit, result.getOrDefault(creditAndDebit, BigDecimal.ZERO).subtract(postAmt));
+            }
         }
-        sum = sumCredits - sumDebits;
-        System.out.println(" the total sum is" + sum);
-        log.debug(" the total sum is" + sum);
-        if (sum != 0) {
-            auditLogService.log("processData", "Comparing Creditor and Debtor Balances", " UserID: ", "comparing creditor and debtor balances - failed", " Creditor and debtor balances do not tally for AppCode, This a suspense Account " + sum);
-            throw new IllegalArgumentException("Creditor and Debitor balance mismatch! This a suspense Account " + sum);
-        }
+        //If any of the object in the map has other than 0.0 value, then log the error
+        result.entrySet().stream().filter(entry -> entry.getValue().compareTo(BigDecimal.ZERO) != 0).forEach(entry -> {
+            auditLogService.log("creditAndDebitTally", "Credit and Debit Tally", "UserID: " + entry.getKey().getCO_CODE(), "Credit and Debit Tally failed", "Credit and Debit Tally failed for CO_CODE: " + entry.getKey().getCO_CODE() + " CURCY_3_CODE: " + entry.getKey().getCURCY_3_CODE() + " UNIT_NO: " + entry.getKey().getUNIT_NO() + " POST_AMT: " + entry.getValue());
+            throw new BusinessException("Credit and Debit Tally failed for CO_CODE: " + entry.getKey().getCO_CODE() + " CURCY_3_CODE: " + entry.getKey().getCURCY_3_CODE() + " UNIT_NO: " + entry.getKey().getUNIT_NO() + " POST_AMT: " + entry.getValue());
+        });
     }
 }
