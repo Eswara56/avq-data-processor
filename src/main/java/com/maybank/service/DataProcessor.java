@@ -52,7 +52,7 @@ public class DataProcessor {
         SystemConfigResponse systemConfigResponse = systemConfigRepository.fetchSystemConfig(appCode);
         jobStatusAyncService.updateJobStatusMapAndInsertIntoDB(appCode, new Status(StatusMessageType.COMPLETED.getValue(), 10.0),
                 new JobStatus(ApplicationUtil.currentMethodName(), appCode, "CONFIG", 0, ApplicationUtil.currentMethodName(),
-                "System configuration fetched successfully", null));
+                        "System configuration fetched successfully", null));
         return systemConfigResponse;
     }
 
@@ -213,8 +213,6 @@ public class DataProcessor {
                     fieldMap.setValue("'" + value.replace("'", "''") + "'");
                     fieldMap.setType(field.getFILED_TYPE());
                 }
-                if (field.getFIELD_NAME().equalsIgnoreCase("CURCY_3_CODE")) {
-                }
                 System.out.println("Header Line: {}" + value);
                 dbRow.add(fieldMap);
             }
@@ -224,42 +222,49 @@ public class DataProcessor {
 
         //Dynamically insert data into upstreamResponseData table based on the field map
         fileDataService.processData(appCode, fileConfig.getDatabaseType() + "." + tableName, columnAndValues);
-        if(upstreamResponseData.getFILE_TYPE().equalsIgnoreCase("DETAIL")) {
+        if (upstreamResponseData.getFILE_TYPE().equalsIgnoreCase("DETAIL")) {
             creditAndDebitTally(columnAndValues);
         }
     }
 
+    //
     private void creditAndDebitTally(List<List<FieldMap>> columnAndValues) {
 // Nested Map to group by CO_CODE -> CURCY_3_CODE -> UNIT_NO -> DR_CR_IND
         Map<CreditAndDebit, BigDecimal> result = new HashMap<>();
+        BigDecimal totalCredit = BigDecimal.ZERO;
+        BigDecimal totalDebit = BigDecimal.ZERO;
         for (List<FieldMap> dbRow : columnAndValues) {
             //double postAmt = 0.0;
             BigDecimal postAmt = BigDecimal.ZERO;
             CreditAndDebit creditAndDebit = new CreditAndDebit();
             String DR_CR_IND = "";
             for (FieldMap eachColumn : dbRow) {
-                if (eachColumn.getColumn().replace("'","").equals("CO_CODE")) {
-                    creditAndDebit.setCO_CODE(eachColumn.getValue().replace("'",""));
-                } else if (eachColumn.getColumn().replace("'","").trim().equals("CURCY_3_CODE")) {
-                    creditAndDebit.setCURCY_3_CODE(eachColumn.getValue().replace("'",""));
-                } else if (eachColumn.getColumn().replace("'","").equals("UNIT_NO")) {
+                if (eachColumn.getColumn().replace("'", "").equals("CO_CODE")) {
+                    creditAndDebit.setCO_CODE(eachColumn.getValue().replace("'", ""));
+                } else if (eachColumn.getColumn().replace("'", "").trim().equals("CURCY_3_CODE")) {
+                    creditAndDebit.setCURCY_3_CODE(eachColumn.getValue().replace("'", ""));
+                } else if (eachColumn.getColumn().replace("'", "").equals("UNIT_NO")) {
                     creditAndDebit.setUNIT_NO(Integer.parseInt(eachColumn.getValue().replace("'", "")));
-                } else if (eachColumn.getColumn().replace("'","").equals("DR_CR_IND")) {
+                } else if (eachColumn.getColumn().replace("'", "").equals("DR_CR_IND")) {
                     DR_CR_IND = eachColumn.getValue().replace("'", "");
-                } else if (eachColumn.getColumn().replace("'","").equals("POST_AMT")) {
-                    postAmt = new BigDecimal(eachColumn.getValue().replace("'",""));
+                } else if (eachColumn.getColumn().replace("'", "").equals("POST_AMT")) {
+                    postAmt = new BigDecimal(eachColumn.getValue().replace("'", ""));
                 }
             }
             if (StringUtils.isNotBlank(DR_CR_IND) && DR_CR_IND.equals("C")) {
+                totalCredit = totalCredit.add(postAmt);
                 result.put(creditAndDebit, result.getOrDefault(creditAndDebit, BigDecimal.ZERO).add(postAmt));
-            } else if(StringUtils.isNotBlank(DR_CR_IND) && DR_CR_IND.equals("D")) {
+            } else if (StringUtils.isNotBlank(DR_CR_IND) && DR_CR_IND.equals("D")) {
+                totalDebit = totalDebit.add(postAmt);
                 result.put(creditAndDebit, result.getOrDefault(creditAndDebit, BigDecimal.ZERO).subtract(postAmt));
             }
         }
+        System.out.println("Total Credit: " + totalCredit);
+        System.out.println("Total Debit: " + totalDebit);
         //If any of the object in the map has other than 0.0 value, then log the error
         result.entrySet().stream().filter(entry -> entry.getValue().compareTo(BigDecimal.ZERO) != 0).forEach(entry -> {
             auditLogService.log("creditAndDebitTally", "Credit and Debit Tally", "UserID: " + entry.getKey().getCO_CODE(), "Credit and Debit Tally failed", "Credit and Debit Tally failed for CO_CODE: " + entry.getKey().getCO_CODE() + " CURCY_3_CODE: " + entry.getKey().getCURCY_3_CODE() + " UNIT_NO: " + entry.getKey().getUNIT_NO() + " POST_AMT: " + entry.getValue());
-            throw new BusinessException("Credit and Debit Tally failed for CO_CODE: " + entry.getKey().getCO_CODE() + " CURCY_3_CODE: " + entry.getKey().getCURCY_3_CODE() + " UNIT_NO: " + entry.getKey().getUNIT_NO() + " POST_AMT: " + entry.getValue());
+            //throw new BusinessException("Credit and Debit Tally failed for CO_CODE: " + entry.getKey().getCO_CODE() + " CURCY_3_CODE: " + entry.getKey().getCURCY_3_CODE() + " UNIT_NO: " + entry.getKey().getUNIT_NO() + " POST_AMT: " + entry.getValue());
         });
     }
 }

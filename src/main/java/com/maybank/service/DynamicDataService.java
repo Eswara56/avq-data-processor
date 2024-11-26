@@ -40,7 +40,7 @@ public class DynamicDataService {
      */
     public void processData(String appCode, String headerTable, List<List<FieldMap>> headerColumnAndValues) {
         // Start measuring execution time
-        long startTime = System.currentTimeMillis();
+//      /  long startTime = System.currentTimeMillis();
         //Generate Dynamic SQL Query using the headerTable and headerColumnAndValues
         //Insert the data into the database
         List<String> insertQueries = new ArrayList<>();
@@ -65,12 +65,12 @@ public class DynamicDataService {
             throw new BusinessException("Error while inserting data into the database: " + e.getMessage());
         }
 
-        // End measuring execution time
-        long endTime = System.currentTimeMillis();
-        // Calculate and log the execution time
-        long durationInSeconds  = (endTime - startTime)/1000; // Convert nanoseconds to seconds
-        System.out.println("Execution time: " + durationInSeconds  + " seconds");
-        log.debug("Execution time: " + durationInSeconds  + " seconds");
+//         End measuring execution time
+//        long endTime = System.currentTimeMillis();
+////         Calculate and log the execution time
+//        long durationInSeconds  = (endTime - startTime)/1000; // Convert nanoseconds to seconds
+//        System.out.println("Execution time: " + durationInSeconds  + " seconds");
+//        log.debug("Execution time: " + durationInSeconds  + " seconds");
     }
 
     /**
